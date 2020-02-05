@@ -14,5 +14,6 @@ LazyData: true
 URL: https://github.com/sangeetabhatia03/promedr
 BugReports: https://github.com/sangeetabhatia03/promedr/issues
 Suggests: 
-    testthat,
+    testthat (>= 2.1.0),
     covr
+RoxygenNote: 6.1.1
