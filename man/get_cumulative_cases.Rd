@@ -4,8 +4,10 @@
 \alias{get_cumulative_cases}
 \title{Get cumulative case count as sum of specified case categories}
 \usage{
-get_cumulative_cases(x, case_type = c("scc", "sc", "cc", "scd", "sd",
-  "cd", "ALL"))
+get_cumulative_cases(
+  x,
+  case_type = c("scc", "sc", "cc", "scd", "sd", "cd", "ALL")
+)
 }
 \arguments{
 \item{x}{data from ProMED and HealthMap.

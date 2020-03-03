@@ -29,24 +29,26 @@
 ##' for which only the first value should be retained.
 ##' @param rule any valid R function that accepts a numeric vector
 ##' and returns a number. Defaults to median
-##' @param sep
+##' @param sep separator used to paste multiple values
+##' from a column
 ##' @return data.frame with a single row
 ##' @author Sangeeta Bhatia
-##' @examples Made-up data,
+##' @examples ## Made-up data
 ##' made_up <- data.frame(
 ##'    country = rep("singapore", 3),
 ##'    cases = c(3, 7, 9),
-##'    alert_id = rep(A, 3),
+##'    alert_id = rep(letters[1], 3),
 ##'    longitude = c(103.8, 103.8, 103.8),
 ##'    latitude = c(1.4, 1.5, 1.4)
 ##' )
-##' Alert-ids in this data.frame are duplicated. Merging the rows then
+##' ##Alert-ids in this data.frame are duplicated. Merging the rows then
 ##' merged <-  merge_duplicate_alerts(
 ##'   made_up,
 ##'   keep_all = c("country", "alert_id"),
 ##'   keep_first = c("longitude", "latitude"))
+##' @importFrom stats median
 ##' @export
-merge_duplicate_alerts <- function(df, keep_all, keep_first, rule = median, sep = " / ") {
+merge_duplicate_alerts <- function(df, keep_all, keep_first, rule = stats::median, sep = " / ") {
 
     all_cols <- colnames(df)
     missing <- which(! all_cols %in% c(keep_all, keep_first, "cases"))
