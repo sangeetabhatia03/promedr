@@ -1,50 +1,117 @@
-##' Collapse multiple strings into one
+##' Merge rows with duplicate alerts
 ##'
-##' Where ProMED or HealthMap data contain multiple rows with the same
-##' alert-id, we merge the alerts into one. When this is done, the mete
-##' data associated with the rows is collapsed intto a sungle string.
-##' Examples include the URL associated with the report. This is done
-##' to prevent the metadata from being lost when rows are merged.
-##' @title
-##' @param cols_dup
-##' @return
-##' @author Sangeeta Bhatia
+##' Each record in ProMED and HealthMap data feeds is (in principle)
+##' associated with
+##' a unique alert-id. Occasionally, we get multiple rows that have
+##' the same alert-id. In such instances, we want to merge these rows
+##' into a single row in a meaningful way. For the meta-data associated
+##' with the records e.g., the URL, it would be useful to retain all
+##' of them, especially if these columns are not being used in the
+##' analysis downstream. For others, e.g., the longitude and latitude,
+##' we expect them to be the same across the set of records, but if they
+##' are not, we want to retain one of them. Finally, for numeric columns
+##' (particularly cases) we want a summary statistic like median or
+##' mean.
+##' This function merges the records with the user picking which
+##' columns should be merged in which way i.e., whether all values
+##' or only one of them should be retained.
+##' The only exception is the column called cases, which is always
+##' summarised using a mathematical function specified by the arg rule.
 ##'
-paste_single_column <- function(column, sep) {
-    paste(column, collapse = sep)
-}
-
-##' .. content for \description{} (no empty lines) ..
-##'
-##' .. content for \details{} ..
-##' @title
 ##' @param df data frame containing duplicate alerts. Must contain a
 ##' column called cases. All columns except cases will be merged by
 ##' collpasing their content into a single string for each column.
 ##' The column cases will be merged accrding to the rule argument.
 ##' E.g., median will return the median of cases.
+##' @param keep_all character vector. Names of columns for which values
+##' in all rows should be retained.
+##' @param keep_first character vector. Names of columns for which values
+##' for which only the first value should be retained.
 ##' @param rule any valid R function that accepts a numeric vector
 ##' and returns a number. Defaults to median
 ##' @param sep
 ##' @return data.frame with a single row
 ##' @author Sangeeta Bhatia
+##' @examples Made-up data,
+##' made_up <- data.frame(
+##'    country = rep("singapore", 3),
+##'    cases = c(3, 7, 9),
+##'    alert_id = rep(A, 3),
+##'    longitude = c(103.8, 103.8, 103.8),
+##'    latitude = c(1.4, 1.5, 1.4)
+##' )
+##' Alert-ids in this data.frame are duplicated. Merging the rows then
+##' merged <-  merge_duplicate_alerts(
+##'   made_up,
+##'   keep_all = c("country", "alert_id"),
+##'   keep_first = c("longitude", "latitude"))
 ##' @export
-merge_duplicate_alerts <- function(df, rule = median, sep = " / ") {
+merge_duplicate_alerts <- function(df, keep_all, keep_first, rule = median, sep = " / ") {
 
-    cols_to_merge <- colnames(df)
-    cols_to_merge <- cols_to_merge[! cols_to_merge %in% "cases"]
+    all_cols <- colnames(df)
+    missing <- which(! all_cols %in% c(keep_all, keep_first, "cases"))
+    if (length(missing) > 1) {
+        msg <- "A merging rule should be specified for all columns."
+        msg <- paste(msg, "Np rule specified for following columns: ")
+        msg <- paste(msg, missing, " Defaults to keep_first.")
 
+        warning(msg)
+    }
+    ## cases really should be dealt separately. Issue warning if user
+    ## specifies keep_first or keep_all for cases.
+
+    if ("cases" %in% keep_first) {
+        msg <- "You have chosen to retain only the first value in cases"
+        warning(msg)
+    }
+    ## This is an error since cases will no longer be numeric and will
+    ## cause problem in downstream analysis.
+    if ("cases" %in% keep_all) {
+        msg <- "You have chosen to retain all values in column cases."
+        msg <- paste(
+            msg, "This will make column cases non-numeric."
+        )
+        stop(msg, call. = FALSE)
+    }
+
+    common <- intersect(keep_first, keep_all)
+    if (length(common) > 1) {
+        msg <- paste(
+            "Columns", common, "are in both keep_first and keep_all."
+        )
+        msg <- paste(
+            msg, "Only first value will be retained for these columns."
+        )
+        warning(msg)
+    }
     ##template for output
     out <- df[1, ]
 
-    for (column in cols_to_merge) {
+    for (column in keep_all) {
 
-        out[[column]] <- paste_single_column(df[[column]], sep)
+        out[[column]] <- paste(
+            df[[column]], sep = sep, collapse = sep
+        )
 
     }
 
+    for (column in keep_first) {
 
-    out$cases <- rule(df$cases, na.rm = TRUE)
+        vals <- unique(out[[column]])
+        if (length(vals) > 1) {
+            msg <- "Not all values in"
+            msg <- paste(column, "are identical. Retaining only first")
+            warning(msg)
+        }
+
+        out[[column]] <- df[[column]][1]
+
+    }
+
+    if (! "cases" %in% keep_first) {
+        out$cases <- rule(df$cases, na.rm = TRUE)
+    }
+
 
 
     out
