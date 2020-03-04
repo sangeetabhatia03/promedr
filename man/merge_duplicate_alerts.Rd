@@ -8,6 +8,7 @@ merge_duplicate_alerts(
   df,
   keep_all,
   keep_first,
+  use_rule = c("cases"),
   rule = stats::median,
   sep = " / "
 )
@@ -24,6 +25,9 @@ in all rows should be retained.}
 
 \item{keep_first}{character vector. Names of columns for which values
 for which only the first value should be retained.}
+
+\item{use_rule}{columns that should be summarised using rule.
+These should all be numeric.}
 
 \item{rule}{any valid R function that accepts a numeric vector
 and returns a number. Defaults to median}

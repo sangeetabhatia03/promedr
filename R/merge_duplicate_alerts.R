@@ -27,6 +27,8 @@
 ##' in all rows should be retained.
 ##' @param keep_first character vector. Names of columns for which values
 ##' for which only the first value should be retained.
+##' @param use_rule columns that should be summarised using rule.
+##' These should all be numeric.
 ##' @param rule any valid R function that accepts a numeric vector
 ##' and returns a number. Defaults to median
 ##' @param sep separator used to paste multiple values
@@ -48,10 +50,16 @@
 ##'   keep_first = c("longitude", "latitude"))
 ##' @importFrom stats median
 ##' @export
-merge_duplicate_alerts <- function(df, keep_all, keep_first, rule = stats::median, sep = " / ") {
+merge_duplicate_alerts <- function(df,
+                                   keep_all,
+                                   keep_first,
+                                   use_rule = c("cases"),
+                                   rule = stats::median,
+                                   sep = " / ") {
 
     all_cols <- colnames(df)
     missing <- which(! all_cols %in% c(keep_all, keep_first, "cases"))
+
     if (length(missing) > 1) {
         msg <- "A merging rule should be specified for all columns."
         msg <- paste(msg, "Np rule specified for following columns: ")
@@ -85,6 +93,22 @@ merge_duplicate_alerts <- function(df, keep_all, keep_first, rule = stats::media
             msg, "Only first value will be retained for these columns."
         )
         warning(msg)
+    }
+
+    are_numeric <- sapply(
+            use_rule, function(x) is.numeric(df[[x]])
+    )
+
+
+    if (! all(are_numeric)) {
+        msg <- "All columns specified using use_rule should be numeric."
+        msg <- paste(
+            msg, "Not numeric ", use_rule[! are_numeric]
+        )
+        stop(
+            ,
+            call. = FALSE
+            )
     }
     ##template for output
     out <- df[1, ]
