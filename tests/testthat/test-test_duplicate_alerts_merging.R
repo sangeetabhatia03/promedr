@@ -19,8 +19,6 @@ test_that("Merging duplicate rows works", {
     ## between keep_all, keep_first and use_rule
     ## If not, expect warning.
 
-    keep_all <- c("alert_id", "URL")
-    keep_first <- "long"
     msg <- "A merging rule should be specified for all columns."
     msg <- paste(msg, "No rule specified for following columns: ")
     msg <- paste(msg," lat Defaults to keep_first.")
@@ -28,8 +26,8 @@ test_that("Merging duplicate rows works", {
     expect_warning(
         merge_duplicate_alerts(
             df = bad,
-            keep_all = keep_all,
-            keep_first = keep_first
+            keep_all = c("alert_id", "URL"),
+            keep_first = "long"
         )
     )
 
@@ -47,6 +45,57 @@ test_that("Merging duplicate rows works", {
     ## keep_last or use_rules is
     expect_equal(bad$lat[1], merged$lat[1])
 
+    ## 5. warning if user chooses to keep only first value in cases
+    expect_warning(
+        merge_duplicate_alerts(
+            df = bad,
+            keep_all = c("alert_id", "URL"),
+            keep_first = c("long", "cases", "lat"),
+            use_rule = NULL
+        )
+    )
+
+    ## 6. Error if keep_all is specified for cases
+    expect_error(
+        merge_duplicate_alerts(
+            df = bad,
+            keep_all = c("alert_id", "URL", "cases"),
+            keep_first = c("long", "lat"),
+            use_rule = NULL
+        )
+    )
+
+    ## 7. Warning if a column is specified in both keep_all
+    ## and keep_first
+    expect_warning(
+        merge_duplicate_alerts(
+            df = bad,
+            keep_all = c("alert_id", "URL", "long"),
+            keep_first = c("long", "lat")
+        )
+    )
+
+    ## 8. Only first value is indeed retained
+    merged <- merge_duplicate_alerts(
+        df = bad,
+        keep_all = c("alert_id", "URL", "long"),
+        keep_first = c("long", "lat")
+    )
+
+    expect_equal(merged$long[1], bad$long[1])
+
+    ## 9. Error on attempt to summarise non-numeric
+    ## columns using use_rule
+    expect_error(
+        merge_duplicate_alerts(
+            df = bad,
+            keep_all = c("alert_id"),
+            keep_first = c("long", "lat"),
+            use_rule = c("cases", "URL")
+        )
+    )
+
+    ## 10.
 
 }
 

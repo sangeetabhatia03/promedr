@@ -99,7 +99,7 @@ merge_duplicate_alerts <- function(df,
     }
 
     common <- intersect(keep_first, keep_all)
-    if (length(common) > 1) {
+    if (length(common) > 0) {
         msg <- paste(
             "Columns", common, "are in both keep_first and keep_all."
         )
@@ -110,7 +110,7 @@ merge_duplicate_alerts <- function(df,
     }
 
     are_numeric <- sapply(
-            use_rule, function(x) is.numeric(df[[x]])
+        use_rule, function(x) is.numeric(df[[x]])
     )
 
 
@@ -119,10 +119,7 @@ merge_duplicate_alerts <- function(df,
         msg <- paste(
             msg, "Not numeric ", use_rule[! are_numeric]
         )
-        stop(
-            ,
-            call. = FALSE
-            )
+        stop(msg, call. = FALSE)
     }
     ##template for output
     out <- df[1, ]
@@ -148,8 +145,8 @@ merge_duplicate_alerts <- function(df,
 
     }
 
-    if (! "cases" %in% keep_first) {
-        out$cases <- rule(df$cases, na.rm = TRUE)
+    for (column %in% use_rule) {
+        out[[column]] <- rule(df[[column]], na.rm = TRUE)
     }
 
 
