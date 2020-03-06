@@ -58,12 +58,26 @@ merge_duplicate_alerts <- function(df,
                                    sep = " / ") {
 
     all_cols <- colnames(df)
-    missing <- which(! all_cols %in% c(keep_all, keep_first, "cases"))
 
-    if (length(missing) > 1) {
+    ## Check that at least one column has duplicated values across
+    ## all rows, else there would be little point in merging.
+    unique_vals <- sapply(all_cols, function(x) length(unique(df[[x]])))
+
+    if (! any(unique_vals == 1)) {
+
+        masg <- "None of the columns in the data have identical values
+                 across rows. Will merge anyway but check that you
+                 really want to merge rows."
+        warning(msg)
+    }
+
+
+    missing <- which(! all_cols %in% c(keep_all, keep_first, use_rule))
+
+    if (length(missing) > 0) {
         msg <- "A merging rule should be specified for all columns."
-        msg <- paste(msg, "Np rule specified for following columns: ")
-        msg <- paste(msg, missing, " Defaults to keep_first.")
+        msg <- paste(msg, "No rule specified for following columns: ")
+        msg <- paste(msg, all_cols[missing], " Defaults to keep_first.")
 
         warning(msg)
     }
