@@ -145,7 +145,7 @@ merge_duplicate_alerts <- function(df,
 
     }
 
-    for (column %in% use_rule) {
+    for (column in use_rule) {
         out[[column]] <- rule(df[[column]], na.rm = TRUE)
     }
 
