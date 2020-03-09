@@ -95,7 +95,19 @@ test_that("Merging duplicate rows works", {
         )
     )
 
-    ## 10.
+    ## 10. all values in keep_all are retained
+    merged <- merge_duplicate_alerts(
+        df = bad,
+        keep_all = c("alert_id", "URL"),
+        keep_first = c("long", "lat"),
+        sep = ";"
+    )
+
+    expect_equal(
+        merged$URL,
+        "https://promedmail.org/promed-post/?id=7051670;https://promedmail.org/promed-post/?id=7051671;https://healthmap.org/promed/?p=155"
+    )
+
 
 }
 
